@@ -2,6 +2,7 @@ import { Routes, Route, Link } from 'react-router-dom'
 import { Calculator } from './pages/Calculator'
 import { Compare } from './pages/Compare'
 import { Scenarios } from './pages/Scenarios'
+import { BonusAnalysis } from './pages/BonusAnalysis'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,9 @@ function Layout({ children }: { children: React.ReactNode }) {
           </Link>
           <Link to="/compare" className="text-slate-600 hover:text-slate-900">
             Porównanie
+          </Link>
+          <Link to="/bonus" className="text-slate-600 hover:text-slate-900">
+            Bonus
           </Link>
           <Link to="/scenarios" className="text-slate-600 hover:text-slate-900">
             Scenariusze
@@ -31,6 +35,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Calculator />} />
         <Route path="/compare" element={<Compare />} />
+        <Route path="/bonus" element={<BonusAnalysis />} />
         <Route path="/scenarios" element={<Scenarios />} />
       </Routes>
     </Layout>

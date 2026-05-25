@@ -125,6 +125,35 @@ export function Compare() {
             </p>
           </div>
         </details>
+        <details className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+          <summary className="cursor-pointer font-medium text-slate-800">
+            💡 Co to jest „próg sweet spot"?
+          </summary>
+          <div className="mt-2 space-y-2 text-slate-600">
+            <p>
+              Liczba między 0 a 1 (domyślnie 0.5) która decyduje{' '}
+              <strong>jak agresywnie szukamy sweet spotu</strong>. Algorytm bierze maksymalną
+              marginalną oszczędność z całego sweepu i mnoży przez próg — to jest „cutoff".
+              Sweet spot to ostatni punkt w sweepie, gdzie marginalna oszczędność wciąż jest powyżej
+              tego cutoffu.
+            </p>
+            <p>
+              Przykład: max marginalna oszczędność w sweepie = 80 000 PLN.
+              <br />
+              Próg <strong>0.5</strong> → cutoff = 40 000 PLN. Sweet spot to ostatni poziom nadpłaty,
+              gdzie kolejny krok jeszcze przynosi ≥ 40 000 PLN.
+              <br />
+              Próg <strong>0.7</strong> → cutoff = 56 000 PLN. Bardziej restrykcyjnie — sweet spot
+              przesunie się wcześniej (mniejsza nadpłata zostanie polecona).
+            </p>
+            <p>
+              <strong>Niższy próg</strong> (np. 0.3) — bardziej tolerancyjny, sweet spot pójdzie dalej,
+              dostajesz wyższą rekomendowaną nadpłatę.{' '}
+              <strong>Wyższy próg</strong> (np. 0.7) — wymagamy żeby kolejny krok dawał wciąż 70%
+              tego co najlepszy w całym sweepie, sweet spot będzie wcześniej.
+            </p>
+          </div>
+        </details>
         <SweepConfig value={sweepCfg} onChange={setSweepCfg} />
         <div className="mt-4">
           {sweepError && <p className="text-sm text-red-600">Błąd: {sweepError.message}</p>}
