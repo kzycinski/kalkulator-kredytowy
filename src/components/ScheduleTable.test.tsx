@@ -24,7 +24,7 @@ describe('ScheduleTable', () => {
   it('renders all rows on single page when count is at most page size', () => {
     const rows = Array.from({ length: 12 }, (_, i) => makeRow(i + 1))
     render(<ScheduleTable rows={rows} />)
-    expect(screen.getByText(/12 rat\s+•\s+1 lat/)).toBeInTheDocument()
+    expect(screen.getByText(/12 rat\s+•\s+1 rok/)).toBeInTheDocument()
     expect(screen.getAllByRole('row')).toHaveLength(13)
   })
 

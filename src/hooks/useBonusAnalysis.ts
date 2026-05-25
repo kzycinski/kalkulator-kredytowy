@@ -18,6 +18,8 @@ export interface BonusCell {
   monthsSaved: number
   interestSaved: number
   totalOverpayment: number
+  totalPaid: number
+  totalInterest: number
   roi: number
 }
 
@@ -27,6 +29,7 @@ export interface BonusAnalysisResult {
   cells: BonusCell[]
   baselineMonths: number
   baselineInterest: number
+  baselineTotalPaid: number
 }
 
 const KEY_BASELINE = '__baseline__'
@@ -95,6 +98,8 @@ export function useBonusAnalysis(config: BonusAnalysisConfig) {
           monthsSaved,
           interestSaved,
           totalOverpayment,
+          totalPaid: entry.summary.totalPaid,
+          totalInterest: entry.summary.totalInterest,
           roi,
         })
       }
@@ -106,6 +111,7 @@ export function useBonusAnalysis(config: BonusAnalysisConfig) {
       cells,
       baselineMonths: baseline.summary.months,
       baselineInterest: baseline.summary.totalInterest,
+      baselineTotalPaid: baseline.summary.totalPaid,
     }
   }, [query.data, config])
 

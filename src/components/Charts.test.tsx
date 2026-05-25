@@ -45,6 +45,6 @@ describe('Charts', () => {
   it('renders heading with loan length', () => {
     render(<Charts rows={makeRows(12)} annualRate={0.06} />)
     expect(screen.getByRole('heading', { name: /Wykresy/ })).toBeInTheDocument()
-    expect(screen.getByText(/12 rat • 1 lat/)).toBeInTheDocument()
+    expect(screen.getByText(/12 rat • 1 rok/)).toBeInTheDocument()
   })
 })

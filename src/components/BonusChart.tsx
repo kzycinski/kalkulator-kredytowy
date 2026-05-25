@@ -9,7 +9,7 @@ import {
   YAxis,
 } from 'recharts'
 import type { BonusAnalysisResult } from '../hooks/useBonusAnalysis'
-import { formatPLN } from '../lib/format'
+import { formatPLN, yearsWord } from '../lib/format'
 
 const SERIES_COLORS = [
   '#15803d',
@@ -20,10 +20,10 @@ const SERIES_COLORS = [
   '#0891b2',
 ]
 
-function monthsLabel(months: number): string {
+function durationLabel(months: number): string {
   if (months % 12 === 0) {
     const years = months / 12
-    return years === 1 ? '1 rok' : `${years} lat`
+    return `${years} ${yearsWord(years)}`
   }
   return `${months} mies.`
 }
@@ -41,7 +41,7 @@ export function BonusChart({ result }: { result: BonusAnalysisResult | null | un
     const row: Record<string, number> = { bonus }
     for (const dur of result.durationsMonths) {
       const cell = result.cells.find((c) => c.bonus === bonus && c.durationMonths === dur)
-      row[monthsLabel(dur)] = cell ? cell.interestSaved : 0
+      row[durationLabel(dur)] = cell ? cell.interestSaved : 0
     }
     return row
   })
@@ -82,7 +82,7 @@ export function BonusChart({ result }: { result: BonusAnalysisResult | null | un
             <Line
               key={dur}
               type="monotone"
-              dataKey={monthsLabel(dur)}
+              dataKey={durationLabel(dur)}
               stroke={SERIES_COLORS[idx % SERIES_COLORS.length]}
               strokeWidth={2}
               dot={{ r: 3 }}

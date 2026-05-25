@@ -3,6 +3,7 @@ import { Calculator } from './pages/Calculator'
 import { Compare } from './pages/Compare'
 import { Scenarios } from './pages/Scenarios'
 import { BonusAnalysis } from './pages/BonusAnalysis'
+import { Doradca } from './pages/Doradca'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,9 @@ function Layout({ children }: { children: React.ReactNode }) {
           </Link>
           <Link to="/bonus" className="text-slate-600 hover:text-slate-900">
             Bonus
+          </Link>
+          <Link to="/doradca" className="text-slate-600 hover:text-slate-900">
+            Doradca
           </Link>
           <Link to="/scenarios" className="text-slate-600 hover:text-slate-900">
             Scenariusze
@@ -36,6 +40,7 @@ export default function App() {
         <Route path="/" element={<Calculator />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/bonus" element={<BonusAnalysis />} />
+        <Route path="/doradca" element={<Doradca />} />
         <Route path="/scenarios" element={<Scenarios />} />
       </Routes>
     </Layout>

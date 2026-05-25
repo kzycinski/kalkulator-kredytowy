@@ -22,13 +22,26 @@ export function formatPercent(value: number): string {
   return PERCENT.format(value)
 }
 
+export function yearsWord(n: number): string {
+  if (n === 1) return 'rok'
+  const lastTwo = n % 100
+  const last = n % 10
+  if (lastTwo >= 12 && lastTwo <= 14) return 'lat'
+  if (last >= 2 && last <= 4) return 'lata'
+  return 'lat'
+}
+
+export function formatYears(years: number): string {
+  return `${years} ${yearsWord(years)}`
+}
+
 export function formatMonths(months: number): string {
   if (months <= 0) return '0 mies.'
   const years = Math.floor(months / 12)
   const rem = months % 12
   if (years === 0) return `${months} mies.`
-  if (rem === 0) return `${years} lat`
-  return `${years} lat ${rem} mies.`
+  if (rem === 0) return `${years} ${yearsWord(years)}`
+  return `${years} ${yearsWord(years)} ${rem} mies.`
 }
 
 export function pluralRat(n: number): string {
