@@ -1,6 +1,11 @@
 import { useMemo } from 'react'
 import { useCompareScenarios } from './useCompareScenarios'
 import type { ScenarioSpec, ScheduleRequest } from '../types/calc'
+import {
+  computeAnnuityInvestmentFV,
+  computeReinvestedInstallmentProfit,
+} from '../lib/calc/investment'
+import { round2, round4 } from '../lib/calc/rounding'
 
 export interface BonusAnalysisConfig {
   base: ScheduleRequest
@@ -9,6 +14,7 @@ export interface BonusAnalysisConfig {
   bonusTo: number
   bonusStep: number
   durationsMonths: number[]
+  investmentRate: number
 }
 
 export interface BonusCell {
@@ -21,6 +27,9 @@ export interface BonusCell {
   totalPaid: number
   totalInterest: number
   roi: number
+  investmentFV: number
+  investmentProfit: number
+  reinvestedInstallmentProfit: number
 }
 
 export interface BonusAnalysisResult {
@@ -47,7 +56,7 @@ export function useBonusAnalysis(config: BonusAnalysisConfig) {
     }
     for (const dur of config.durationsMonths) {
       for (let b = config.bonusFrom; b <= config.bonusTo + 1e-9; b += config.bonusStep) {
-        const bonus = Math.round(b * 100) / 100
+        const bonus = round2(b)
         if (bonus === 0) continue
         out.push({
           name: encodeKey(bonus, dur),
@@ -78,6 +87,7 @@ export function useBonusAnalysis(config: BonusAnalysisConfig) {
     if (!baseline) return null
 
     const bonuses = bonusesFromConfig(config)
+    const avgInstallment = round2(baseline.summary.totalInstallments / baseline.summary.months)
     const cells: BonusCell[] = []
     for (const dur of config.durationsMonths) {
       for (const bonus of bonuses) {
@@ -91,6 +101,17 @@ export function useBonusAnalysis(config: BonusAnalysisConfig) {
         const totalOverpayment = entry.summary.totalOverpayment
         const bonusTotalSpent = bonus * dur
         const roi = bonusTotalSpent > 0 ? round4(interestSaved / bonusTotalSpent) : 0
+        const investment = computeAnnuityInvestmentFV(
+          bonus,
+          dur,
+          baseline.summary.months,
+          config.investmentRate,
+        )
+        const reinvestedInstallmentProfit = computeReinvestedInstallmentProfit(
+          avgInstallment,
+          monthsSaved,
+          config.investmentRate,
+        )
         cells.push({
           bonus,
           durationMonths: dur,
@@ -101,6 +122,9 @@ export function useBonusAnalysis(config: BonusAnalysisConfig) {
           totalPaid: entry.summary.totalPaid,
           totalInterest: entry.summary.totalInterest,
           roi,
+          investmentFV: investment.fv,
+          investmentProfit: investment.profitNet,
+          reinvestedInstallmentProfit,
         })
       }
     }
@@ -130,15 +154,7 @@ function encodeKey(bonus: number, dur: number): string {
 function bonusesFromConfig(c: BonusAnalysisConfig): number[] {
   const out: number[] = []
   for (let b = c.bonusFrom; b <= c.bonusTo + 1e-9; b += c.bonusStep) {
-    out.push(Math.round(b * 100) / 100)
+    out.push(round2(b))
   }
   return out
-}
-
-function round2(n: number): number {
-  return Math.round(n * 100) / 100
-}
-
-function round4(n: number): number {
-  return Math.round(n * 10000) / 10000
 }

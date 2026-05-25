@@ -1,67 +1,22 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLoanStore } from '../store/loanStore'
 import { useSchedule } from '../hooks/useSchedule'
+import { useBaseRequest, useCurrentRequest } from '../hooks/useLoanRequests'
 import { LoanParamsForm } from '../components/LoanParamsForm'
 import { TimeBandsEditor } from '../components/TimeBandsEditor'
 import { ScheduleTable } from '../components/ScheduleTable'
 import { Charts } from '../components/Charts'
 import { Summary } from '../components/Summary'
 import { SaveScenarioDialog } from '../components/SaveScenarioDialog'
-import type { ScheduleRequest } from '../types/calc'
 
 export function Calculator() {
-  const principal = useLoanStore((s) => s.principal)
   const annualRate = useLoanStore((s) => s.annualRate)
-  const termMonths = useLoanStore((s) => s.termMonths)
-  const startDate = useLoanStore((s) => s.startDate)
-  const installmentType = useLoanStore((s) => s.installmentType)
-  const overpaymentStrategy = useLoanStore((s) => s.overpaymentStrategy)
-  const recurringOverpayment = useLoanStore((s) => s.recurringOverpayment)
-  const customOverpayments = useLoanStore((s) => s.customOverpayments)
-  const timeBands = useLoanStore((s) => s.timeBands)
 
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
 
-  const currentReq = useMemo<ScheduleRequest>(
-    () => ({
-      principal,
-      annualRate,
-      termMonths,
-      startDate,
-      installmentType,
-      overpaymentStrategy,
-      recurringOverpayment,
-      customOverpayments,
-      timeBands,
-    }),
-    [
-      principal,
-      annualRate,
-      termMonths,
-      startDate,
-      installmentType,
-      overpaymentStrategy,
-      recurringOverpayment,
-      customOverpayments,
-      timeBands,
-    ],
-  )
-
-  const baselineReq = useMemo<ScheduleRequest>(
-    () => ({
-      principal,
-      annualRate,
-      termMonths,
-      startDate,
-      installmentType,
-      overpaymentStrategy,
-      recurringOverpayment: 0,
-      customOverpayments: {},
-      timeBands: [],
-    }),
-    [principal, annualRate, termMonths, startDate, installmentType, overpaymentStrategy],
-  )
+  const currentReq = useCurrentRequest()
+  const baselineReq = useBaseRequest()
 
   const { data: schedule, isLoading, error } = useSchedule(currentReq)
   const { data: baseline } = useSchedule(baselineReq)

@@ -1,5 +1,6 @@
 import { useLoanStore } from '../store/loanStore'
 import { cn } from '../lib/utils'
+import { NumericInput } from './ui/NumericInput'
 
 function NumberField({
   label,
@@ -22,16 +23,12 @@ function NumberField({
     <div className="flex flex-col gap-1">
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium text-slate-700">{label}</span>
-        <input
-          type="number"
-          value={Number.isFinite(value) ? value : ''}
+        <NumericInput
+          value={value}
+          onChange={onChange}
           step={step}
           min={min}
           max={max}
-          onChange={(e) => {
-            const next = Number(e.target.value)
-            if (Number.isFinite(next)) onChange(next)
-          }}
           className={cn(
             'rounded border px-3 py-2 focus:outline-none',
             error

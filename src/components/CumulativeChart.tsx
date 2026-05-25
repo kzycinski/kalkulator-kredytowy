@@ -34,7 +34,7 @@ export function CumulativeChart({ rows }: { rows: ScheduleRow[] }) {
             formatter={(v: number) => formatPLN(v)}
             labelFormatter={(m) => `Miesiąc ${m}`}
           />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
           <Line
             type="monotone"
             dataKey="Kapitał"

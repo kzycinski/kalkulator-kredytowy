@@ -1,12 +1,16 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type {
+  BonusConfigValue,
+  DoradcaConfigValue,
   InstallmentType,
   OverpaymentStrategy,
   SaveScenarioRequest,
   SavedScenario,
   ScheduleRequest,
+  SweepConfigValue,
   TimeBand,
+  UIScenario,
 } from '../types/calc'
 
 export interface CopyResult {
@@ -31,6 +35,10 @@ export interface LoanState {
   timeBands: TimeBand[]
   copyToNextCount: number | null
   savedScenarios: SavedScenario[]
+  sweepCfg: SweepConfigValue
+  compareScenarios: UIScenario[]
+  doradcaCfg: DoradcaConfigValue
+  bonusCfg: BonusConfigValue
 
   setPrincipal: (v: number) => void
   setAnnualRate: (v: number) => void
@@ -50,34 +58,51 @@ export interface LoanState {
   deleteSavedScenario: (id: string) => void
   clearSavedScenarios: () => void
   importSavedScenarios: (scenarios: SavedScenario[]) => ImportResult
+  setSweepCfg: (v: SweepConfigValue) => void
+  setCompareScenarios: (v: UIScenario[]) => void
+  setDoradcaCfg: (v: DoradcaConfigValue) => void
+  setBonusCfg: (v: BonusConfigValue) => void
+  resetToDefaults: () => void
 }
 
 const today = new Date().toISOString().slice(0, 10)
 
+const DEFAULT_COMPARE_SCENARIOS: UIScenario[] = [
+  { name: '500/mies', recurring: 500, bonus: null },
+  { name: '1000/mies', recurring: 1000, bonus: null },
+  { name: '500/mies + 1000 przez 1. rok', recurring: 500, bonus: { duration: 'first-year', amount: 1000 } },
+  { name: '500/mies + 500 przez 2 lata', recurring: 500, bonus: { duration: 'first-two-years', amount: 500 } },
+]
+
+const DEFAULT_SWEEP_CFG: SweepConfigValue = { from: 0, to: 5000, step: 250, threshold: 0.5 }
+const DEFAULT_DORADCA_CFG: DoradcaConfigValue = { comfortable: 1000, max: 5000, hasTarget: false, targetYears: 15, investmentRate: 5 }
+const DEFAULT_BONUS_CFG: BonusConfigValue = { bonusFrom: 0, bonusTo: 5000, bonusStep: 500, durationsMonths: [12, 24, 36, 60], investmentRate: 5 }
+
+const DEFAULT_LOAN_STATE = {
+  principal: 500_000,
+  annualRate: 0.055,
+  termMonths: 360,
+  startDate: today,
+  installmentType: 'EQUAL' as InstallmentType,
+  overpaymentStrategy: 'SHORTEN_TERM' as OverpaymentStrategy,
+  recurringOverpayment: 0,
+  customOverpayments: {} as Record<number, number>,
+  timeBands: [] as TimeBand[],
+  copyToNextCount: null as number | null,
+  sweepCfg: DEFAULT_SWEEP_CFG,
+  compareScenarios: DEFAULT_COMPARE_SCENARIOS,
+  doradcaCfg: DEFAULT_DORADCA_CFG,
+  bonusCfg: DEFAULT_BONUS_CFG,
+}
+
 function generateId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
+  return crypto.randomUUID()
 }
 
 export const useLoanStore = create<LoanState>()(
   persist(
     (set, get) => ({
-      principal: 500_000,
-      annualRate: 0.0725,
-      termMonths: 360,
-      startDate: today,
-      installmentType: 'EQUAL',
-      overpaymentStrategy: 'SHORTEN_TERM',
-      recurringOverpayment: 0,
-      customOverpayments: {},
-      timeBands: [],
-      copyToNextCount: null,
+      ...DEFAULT_LOAN_STATE,
       savedScenarios: [],
 
       setPrincipal: (v) => set({ principal: v }),
@@ -128,6 +153,10 @@ export const useLoanStore = create<LoanState>()(
           recurringOverpayment: scenario.recurringOverpayment,
           customOverpayments: { ...scenario.customOverpayments },
           timeBands: [...scenario.timeBands],
+          ...(scenario.sweepCfg !== undefined && { sweepCfg: scenario.sweepCfg }),
+          ...(scenario.compareScenarios !== undefined && { compareScenarios: scenario.compareScenarios }),
+          ...(scenario.doradcaCfg !== undefined && { doradcaCfg: scenario.doradcaCfg }),
+          ...(scenario.bonusCfg !== undefined && { bonusCfg: scenario.bonusCfg }),
         }),
       addSavedScenario: (input) => {
         const now = new Date().toISOString()
@@ -143,6 +172,10 @@ export const useLoanStore = create<LoanState>()(
           recurringOverpayment: input.recurringOverpayment ?? 0,
           customOverpayments: { ...(input.customOverpayments ?? {}) },
           timeBands: [...(input.timeBands ?? [])],
+          sweepCfg: input.sweepCfg ?? get().sweepCfg,
+          compareScenarios: input.compareScenarios ?? get().compareScenarios,
+          doradcaCfg: input.doradcaCfg ?? get().doradcaCfg,
+          bonusCfg: input.bonusCfg ?? get().bonusCfg,
           createdAt: now,
           updatedAt: now,
         }
@@ -152,6 +185,14 @@ export const useLoanStore = create<LoanState>()(
       deleteSavedScenario: (id) =>
         set((s) => ({ savedScenarios: s.savedScenarios.filter((sc) => sc.id !== id) })),
       clearSavedScenarios: () => set({ savedScenarios: [] }),
+      setSweepCfg: (v) => set({ sweepCfg: v }),
+      setCompareScenarios: (v) => set({ compareScenarios: v }),
+      setDoradcaCfg: (v) => set({ doradcaCfg: v }),
+      setBonusCfg: (v) => set({ bonusCfg: v }),
+      resetToDefaults: () => {
+        useLoanStore.persist.clearStorage()
+        set({ ...DEFAULT_LOAN_STATE, savedScenarios: [] })
+      },
       importSavedScenarios: (scenarios) => {
         const state = get()
         const existing = new Map(state.savedScenarios.map((s) => [s.id, s]))
@@ -172,8 +213,21 @@ export const useLoanStore = create<LoanState>()(
     {
       name: 'kredyt-loan',
       partialize: (state) => ({
+        principal: state.principal,
+        annualRate: state.annualRate,
+        termMonths: state.termMonths,
+        startDate: state.startDate,
+        installmentType: state.installmentType,
+        overpaymentStrategy: state.overpaymentStrategy,
+        recurringOverpayment: state.recurringOverpayment,
+        customOverpayments: state.customOverpayments,
+        timeBands: state.timeBands,
         copyToNextCount: state.copyToNextCount,
         savedScenarios: state.savedScenarios,
+        sweepCfg: state.sweepCfg,
+        compareScenarios: state.compareScenarios,
+        doradcaCfg: state.doradcaCfg,
+        bonusCfg: state.bonusCfg,
       }),
     },
   ),

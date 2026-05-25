@@ -1,54 +1,34 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useLoanStore } from '../store/loanStore'
 import { useBonusAnalysis } from '../hooks/useBonusAnalysis'
-import { BonusConfig, type BonusConfigValue } from '../components/BonusConfig'
+import { useBaseRequest } from '../hooks/useLoanRequests'
+import { BonusConfig } from '../components/BonusConfig'
 import { BonusChart } from '../components/BonusChart'
 import { BonusTable } from '../components/BonusTable'
-import { formatPLN } from '../lib/format'
-import type { ScheduleRequest } from '../types/calc'
+import { formatPercent, formatPLN } from '../lib/format'
 
 export function BonusAnalysis() {
   const principal = useLoanStore((s) => s.principal)
   const annualRate = useLoanStore((s) => s.annualRate)
   const termMonths = useLoanStore((s) => s.termMonths)
-  const startDate = useLoanStore((s) => s.startDate)
-  const installmentType = useLoanStore((s) => s.installmentType)
-  const overpaymentStrategy = useLoanStore((s) => s.overpaymentStrategy)
-  const recurringFromStore = useLoanStore((s) => s.recurringOverpayment)
+  const recurringOverpayment = useLoanStore((s) => s.recurringOverpayment)
+  const cfg = useLoanStore((s) => s.bonusCfg)
+  const setCfg = useLoanStore((s) => s.setBonusCfg)
 
-  const [cfg, setCfg] = useState<BonusConfigValue>({
-    baseRecurring: recurringFromStore || 1000,
-    bonusFrom: 0,
-    bonusTo: 5000,
-    bonusStep: 500,
-    durationsMonths: [12, 24, 36, 60],
-  })
-
-  const baseReq = useMemo<ScheduleRequest>(
-    () => ({
-      principal,
-      annualRate,
-      termMonths,
-      startDate,
-      installmentType,
-      overpaymentStrategy,
-      recurringOverpayment: 0,
-      customOverpayments: {},
-      timeBands: [],
-    }),
-    [principal, annualRate, termMonths, startDate, installmentType, overpaymentStrategy],
-  )
+  const baseReq = useBaseRequest()
 
   const analysisCfg = useMemo(
     () => ({
       base: baseReq,
-      baseRecurring: cfg.baseRecurring,
+      baseRecurring: recurringOverpayment,
       bonusFrom: cfg.bonusFrom,
       bonusTo: cfg.bonusTo,
       bonusStep: cfg.bonusStep,
       durationsMonths: cfg.durationsMonths,
+      investmentRate: cfg.investmentRate,
     }),
-    [baseReq, cfg],
+    [baseReq, recurringOverpayment, cfg],
   )
 
   const { data, isLoading, error, scenarioCount } = useBonusAnalysis(analysisCfg)
@@ -58,11 +38,13 @@ export function BonusAnalysis() {
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-lg border bg-slate-100 px-4 py-2 text-sm text-slate-700">
-        Bazowy kredyt: <strong>{formatPLN(principal)}</strong> @ {(annualRate * 100).toFixed(2)}% /{' '}
-        {termMonths} mies. (zmień w{' '}
-        <a href="/" className="underline">
+        Bazowy kredyt: <strong>{formatPLN(principal)}</strong> @ {formatPercent(annualRate)} /{' '}
+        {termMonths} mies. · cykliczna nadpłata z kalkulatora:{' '}
+        <strong>{formatPLN(recurringOverpayment)}/mies.</strong>{' '}
+        (zmień w{' '}
+        <Link to="/" className="underline">
           Kalkulatorze
-        </a>
+        </Link>
         )
       </div>
 
@@ -71,30 +53,69 @@ export function BonusAnalysis() {
           Bonus na start — czy „sprint" w pierwszych latach się opłaca?
         </h2>
         <p className="mb-3 text-sm text-slate-600">
-          Załóżmy że płacisz cykliczną bazę co miesiąc (np. 1000 PLN). Co jeśli{' '}
+          Każdy scenariusz zakłada cykliczną nadpłatę z Kalkulatora przez cały okres. Co jeśli{' '}
           <strong>dorzucisz dodatkowy bonus tylko przez pierwsze X miesięcy</strong>?
           Tabela i wykres pokazują: ile zaoszczędzisz odsetek, o ile skrócisz kredyt i jaki ROI
           ma każda dodatkowa złotówka bonusu — dla różnych okresów (1 rok, 2 lata, ...).
         </p>
         <details className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
           <summary className="cursor-pointer font-medium text-slate-800">
-            💡 Jak to czytać?
+            💡 Jak to czytać? (metodologia)
           </summary>
-          <div className="mt-2 space-y-2 text-slate-600">
-            <p>
-              <strong>Cykliczna baza</strong> = ile nadpłacasz co miesiąc przez cały okres kredytu.
-              Wszystkie scenariusze ją zachowują.
-            </p>
-            <p>
-              <strong>Bonus</strong> = dodatkowa kwota doliczana tylko w pierwszych N miesiącach.
-              Np. baza 1000 + bonus 4000 przez 1 rok = przez pierwsze 12 mies. nadpłacasz 5000
-              miesięcznie, potem 1000.
-            </p>
-            <p>
-              <strong>ROI bonusu</strong> = oszczędność odsetek / (bonus × miesiące).
-              Wskazuje czy każdy zł bonusu jest efektywny. Powyżej 100% = każdy zł bonusu zwraca
-              więcej niż 1 zł oszczędności.
-            </p>
+          <div className="mt-3 space-y-3 text-slate-600">
+            <div>
+              <p className="font-semibold text-slate-800">Pojęcia</p>
+              <ul className="ml-4 mt-1 list-disc space-y-1">
+                <li>
+                  <strong>Cykliczna baza</strong> — ile nadpłacasz co miesiąc przez cały kredyt.
+                  Występuje w <em>każdej</em> ścieżce (i bazowej, i z bonusem), więc się znosi.
+                </li>
+                <li>
+                  <strong>Bonus</strong> — dodatkowa kwota doliczana <em>tylko</em> przez pierwsze N miesięcy.
+                  Przykład: baza 1000 + bonus 4000 przez rok = pierwsze 12 mies. nadpłacasz 5000, potem 1000.
+                </li>
+                <li>
+                  <strong>ROI bonusu</strong> — odsetki zaoszczędzone / (bonus × miesiące). Powyżej 100% =
+                  każda złotówka bonusu zwraca więcej niż 1 zł.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-semibold text-slate-800">
+                Inwestycja vs Nadpłata — porównanie „equal cash flow"
+              </p>
+              <p className="mt-1">
+                Punkt odniesienia: <strong>bonus PLN/mies przez N miesięcy</strong>. Te same
+                pieniądze, ten sam moment ich wydania — pytanie tylko: do banku jako nadpłata,
+                czy do brokerki jako inwestycja? Horyzont porównania = długość kredytu{' '}
+                <em>z samą bazą, bez bonusu</em> (czyli moment, w którym kredyt by się skończył,
+                gdybyś bonusu nie dorzucał).
+              </p>
+              <div className="mt-2 grid gap-2 md:grid-cols-2">
+                <div className="rounded border border-slate-300 bg-white p-2">
+                  <p className="font-semibold text-amber-700">A) Inwestujesz bonus</p>
+                  <ul className="ml-3 list-disc space-y-0.5">
+                    <li>bonus → brokerka, baza nadal idzie na nadpłatę</li>
+                    <li>portfel rośnie aż do końca kredytu z samą bazą</li>
+                    <li>kolumna pokazuje <em>zysk netto</em> po podatku Belki (19%)</li>
+                  </ul>
+                </div>
+                <div className="rounded border border-slate-300 bg-white p-2">
+                  <p className="font-semibold text-green-700">B) Nadpłacasz bonusem</p>
+                  <ul className="ml-3 list-disc space-y-0.5">
+                    <li>bonus + baza → nadpłata, kredyt kończy się o M mies. wcześniej</li>
+                    <li>w tych M uwolnionych miesiącach reinwestujesz ratę (kol. <em>reinw.</em>)</li>
+                    <li>łączna korzyść = zaoszczędzone odsetki + zysk z reinwestycji raty (po Belce)</li>
+                  </ul>
+                </div>
+              </div>
+              <p className="mt-2 text-xs">
+                W obu ścieżkach co miesiąc wychodzi z portfela ta sama kwota
+                (rata + baza + bonus), tylko bonus trafia w inne miejsce. Pomarańczowy (↑) =
+                inwestycja wygrywa; szary (↓) = nadpłata wygrywa.
+              </p>
+            </div>
           </div>
         </details>
         <BonusConfig value={cfg} onChange={setCfg} />

@@ -1,14 +1,17 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDeleteScenario, useSavedScenariosList } from '../hooks/useSavedScenarios'
 import { useLoanStore } from '../store/loanStore'
 import { ImportExportButtons } from '../components/ImportExportButtons'
-import { formatDate, formatMonths, formatPLN } from '../lib/format'
+import { SaveScenarioDialog } from '../components/SaveScenarioDialog'
+import { formatDate, formatMonths, formatPercent, formatPLN } from '../lib/format'
 
 export function Scenarios() {
-  const { data: scenarios } = useSavedScenariosList()
-  const deleteMutation = useDeleteScenario()
+  const scenarios = useSavedScenariosList()
+  const deleteScenario = useDeleteScenario()
   const loadScenario = useLoanStore((s) => s.loadScenario)
   const navigate = useNavigate()
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
 
   function handleOpen(id: string) {
     const scenario = scenarios.find((s) => s.id === id)
@@ -19,7 +22,7 @@ export function Scenarios() {
 
   function handleDelete(id: string, name: string) {
     if (!window.confirm(`Usunąć scenariusz „${name}"?`)) return
-    deleteMutation.mutate(id)
+    deleteScenario(id)
   }
 
   return (
@@ -33,9 +36,20 @@ export function Scenarios() {
               przenieść na inne urządzenie.
             </p>
           </div>
-          <ImportExportButtons />
+          <div className="flex items-start gap-2">
+            <button
+              type="button"
+              onClick={() => setSaveDialogOpen(true)}
+              className="rounded bg-cyan-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-cyan-700"
+            >
+              💾 Zapisz scenariusz
+            </button>
+            <ImportExportButtons />
+          </div>
         </div>
       </div>
+
+      {saveDialogOpen && <SaveScenarioDialog onClose={() => setSaveDialogOpen(false)} />}
 
       {scenarios.length === 0 && (
         <div className="rounded-lg border bg-white p-6 shadow-sm">
@@ -68,7 +82,7 @@ export function Scenarios() {
                   <td className="px-4 py-3 font-medium">{s.name}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{formatPLN(s.principal)}</td>
                   <td className="px-4 py-3 text-right tabular-nums">
-                    {(s.annualRate * 100).toFixed(2)}%
+                    {formatPercent(s.annualRate)}
                   </td>
                   <td
                     className="px-4 py-3 text-right tabular-nums"
@@ -89,7 +103,7 @@ export function Scenarios() {
                       <button
                         type="button"
                         onClick={() => handleOpen(s.id)}
-                        className="rounded bg-slate-900 px-3 py-1 text-xs text-white hover:bg-slate-800"
+                        className="rounded bg-cyan-600 px-3 py-1 text-xs text-white hover:bg-cyan-700"
                       >
                         Otwórz
                       </button>

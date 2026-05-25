@@ -16,7 +16,7 @@ export function BalanceChart({ rows }: { rows: ScheduleRow[] }) {
   return (
     <div data-testid="balance-chart" className="h-72 w-full">
       <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 24, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis
             dataKey="month"

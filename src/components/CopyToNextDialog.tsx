@@ -85,7 +85,7 @@ export function CopyToNextDialog({
               <button
                 type="button"
                 onClick={() => attemptCopy(false)}
-                className="rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-800"
+                className="rounded bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-700"
               >
                 Kopiuj
               </button>
@@ -117,7 +117,7 @@ export function CopyToNextDialog({
               <button
                 type="button"
                 onClick={() => attemptCopy(false)}
-                className="rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-800"
+                className="rounded bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-700"
               >
                 Kopiuj
               </button>

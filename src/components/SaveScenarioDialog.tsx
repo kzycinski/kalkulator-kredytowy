@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useCreateScenario } from '../hooks/useSavedScenarios'
 import { useLoanStore } from '../store/loanStore'
-import { formatPLN } from '../lib/format'
+import { formatPercent, formatPLN } from '../lib/format'
 
 export function SaveScenarioDialog({ onClose }: { onClose: () => void }) {
   const principal = useLoanStore((s) => s.principal)
@@ -13,9 +13,13 @@ export function SaveScenarioDialog({ onClose }: { onClose: () => void }) {
   const recurringOverpayment = useLoanStore((s) => s.recurringOverpayment)
   const customOverpayments = useLoanStore((s) => s.customOverpayments)
   const timeBands = useLoanStore((s) => s.timeBands)
+  const sweepCfg = useLoanStore((s) => s.sweepCfg)
+  const compareScenarios = useLoanStore((s) => s.compareScenarios)
+  const doradcaCfg = useLoanStore((s) => s.doradcaCfg)
+  const bonusCfg = useLoanStore((s) => s.bonusCfg)
 
   const [name, setName] = useState('')
-  const create = useCreateScenario()
+  const createScenario = useCreateScenario()
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -30,23 +34,23 @@ export function SaveScenarioDialog({ onClose }: { onClose: () => void }) {
 
   function handleSave() {
     if (!isValid) return
-    create.mutate(
-      {
-        name: trimmed,
-        principal,
-        annualRate,
-        termMonths,
-        startDate,
-        installmentType,
-        overpaymentStrategy,
-        recurringOverpayment,
-        customOverpayments,
-        timeBands,
-      },
-      {
-        onSuccess: () => onClose(),
-      },
-    )
+    createScenario({
+      name: trimmed,
+      principal,
+      annualRate,
+      termMonths,
+      startDate,
+      installmentType,
+      overpaymentStrategy,
+      recurringOverpayment,
+      customOverpayments,
+      timeBands,
+      sweepCfg,
+      compareScenarios,
+      doradcaCfg,
+      bonusCfg,
+    })
+    onClose()
   }
 
   return (
@@ -86,7 +90,7 @@ export function SaveScenarioDialog({ onClose }: { onClose: () => void }) {
           <dt>Kwota:</dt>
           <dd className="text-slate-900">{formatPLN(principal)}</dd>
           <dt>Oprocentowanie:</dt>
-          <dd className="text-slate-900">{(annualRate * 100).toFixed(2)}%</dd>
+          <dd className="text-slate-900">{formatPercent(annualRate)}</dd>
           <dt>Okres:</dt>
           <dd className="text-slate-900">{termMonths} mies.</dd>
           <dt>Cykliczna nadpłata:</dt>
@@ -109,7 +113,7 @@ export function SaveScenarioDialog({ onClose }: { onClose: () => void }) {
             type="button"
             onClick={handleSave}
             disabled={!isValid}
-            className="rounded bg-slate-900 px-4 py-2 text-white hover:bg-slate-800 disabled:opacity-50"
+            className="rounded bg-cyan-600 px-4 py-2 text-white hover:bg-cyan-700 disabled:opacity-50"
           >
             Zapisz
           </button>

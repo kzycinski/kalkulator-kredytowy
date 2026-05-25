@@ -1,15 +1,21 @@
-import type { BonusAnalysisResult } from '../hooks/useBonusAnalysis'
-import { formatMonths, formatPLN, yearsWord } from '../lib/format'
+import { useMemo } from 'react'
+import type { BonusAnalysisResult, BonusCell } from '../hooks/useBonusAnalysis'
+import { formatMonths, formatPLN } from '../lib/format'
 
-function durationLabel(months: number): string {
-  if (months % 12 === 0) {
-    const years = months / 12
-    return `${years} ${yearsWord(years)}`
-  }
-  return `${months} mies.`
+function cellKey(bonus: number, dur: number): string {
+  return `${bonus}|${dur}`
 }
 
 export function BonusTable({ result }: { result: BonusAnalysisResult | null | undefined }) {
+  const cellMap = useMemo(() => {
+    const map = new Map<string, BonusCell>()
+    if (!result) return map
+    for (const c of result.cells) {
+      map.set(cellKey(c.bonus, c.durationMonths), c)
+    }
+    return map
+  }, [result])
+
   if (!result || result.cells.length === 0) return null
 
   return (
@@ -37,7 +43,7 @@ export function BonusTable({ result }: { result: BonusAnalysisResult | null | un
               {result.durationsMonths.map((dur, idx) => (
                 <th
                   key={dur}
-                  colSpan={2}
+                  colSpan={3}
                   className={
                     'px-3 py-2 text-center font-semibold ' +
                     (idx < result.durationsMonths.length - 1
@@ -45,7 +51,7 @@ export function BonusTable({ result }: { result: BonusAnalysisResult | null | un
                       : '')
                   }
                 >
-                  {durationLabel(dur)}
+                  {formatMonths(dur)}
                 </th>
               ))}
             </tr>
@@ -53,7 +59,7 @@ export function BonusTable({ result }: { result: BonusAnalysisResult | null | un
               {result.durationsMonths.map((dur, idx) => (
                 <th
                   key={`${dur}-h`}
-                  colSpan={2}
+                  colSpan={3}
                   className={
                     'p-0 ' +
                     (idx < result.durationsMonths.length - 1
@@ -65,6 +71,10 @@ export function BonusTable({ result }: { result: BonusAnalysisResult | null | un
                     <div className="flex-1 px-2 py-1 text-right font-medium">Oszczędność</div>
                     <div className="flex-1 border-l border-slate-200 px-2 py-1 text-right font-medium">
                       Łącznie
+                    </div>
+                    <div className="flex-1 border-l border-slate-200 px-2 py-1 text-right font-medium">
+                      Inwestycja bonusu
+                      <div className="font-normal text-slate-400">(zysk netto po Belce)</div>
                     </div>
                   </div>
                 </th>
@@ -78,24 +88,25 @@ export function BonusTable({ result }: { result: BonusAnalysisResult | null | un
                   {formatPLN(bonus)}
                 </td>
                 {result.durationsMonths.map((dur, idx) => {
-                  const cell = result.cells.find(
-                    (c) => c.bonus === bonus && c.durationMonths === dur,
-                  )
+                  const cell = cellMap.get(cellKey(bonus, dur))
                   const groupBorder =
                     idx < result.durationsMonths.length - 1 ? 'border-r-2 border-slate-300' : ''
                   if (!cell) {
                     return (
                       <td
                         key={dur}
-                        colSpan={2}
+                        colSpan={3}
                         className={`px-2 py-1.5 text-center text-slate-300 ${groupBorder}`}
                       >
                         —
                       </td>
                     )
                   }
+                  const prepayBenefit = cell.interestSaved + cell.reinvestedInstallmentProfit
+                  const investWins = cell.investmentProfit > prepayBenefit
+                  const diff = Math.abs(cell.investmentProfit - prepayBenefit)
                   return (
-                    <td key={dur} colSpan={2} className={`p-0 ${groupBorder}`}>
+                    <td key={dur} colSpan={3} className={`p-0 ${groupBorder}`}>
                       <div className="flex">
                         <div className="flex flex-1 flex-col items-end px-2 py-1.5 leading-tight">
                           <span className="text-sm font-semibold tabular-nums text-green-700">
@@ -106,6 +117,11 @@ export function BonusTable({ result }: { result: BonusAnalysisResult | null | un
                               ? `−${formatMonths(cell.monthsSaved)}`
                               : '—'}
                           </span>
+                          {cell.reinvestedInstallmentProfit > 0 && (
+                            <span className="text-xs tabular-nums text-green-600">
+                              +{formatPLN(cell.reinvestedInstallmentProfit)} reinw.
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-1 flex-col items-end border-l border-slate-200 px-2 py-1.5 leading-tight">
                           <span className="text-sm tabular-nums text-slate-900">
@@ -113,6 +129,17 @@ export function BonusTable({ result }: { result: BonusAnalysisResult | null | un
                           </span>
                           <span className="text-xs tabular-nums text-slate-500">
                             ROI {cell.roi > 0 ? `${(cell.roi * 100).toFixed(0)}%` : '—'}
+                          </span>
+                        </div>
+                        <div className="flex flex-1 flex-col items-end border-l border-slate-200 px-2 py-1.5 leading-tight">
+                          <span className={`text-sm tabular-nums font-semibold ${investWins ? 'text-amber-600' : 'text-slate-400'}`}>
+                            {formatPLN(cell.investmentProfit)}
+                          </span>
+                          <span className="text-xs tabular-nums text-slate-400">
+                            portfel {formatPLN(cell.investmentFV)}
+                          </span>
+                          <span className={`text-xs tabular-nums ${investWins ? 'text-amber-600' : 'text-green-700'}`}>
+                            {investWins ? `↑ +${formatPLN(diff)}` : `↓ −${formatPLN(diff)}`}
                           </span>
                         </div>
                       </div>
@@ -125,14 +152,25 @@ export function BonusTable({ result }: { result: BonusAnalysisResult | null | un
         </table>
       </div>
 
-      <p className="text-xs text-slate-500">
-        <strong>Oszczędność</strong> (kolor zielony) — różnica w odsetkach vs. sama baza.
-        Pod nią: <strong>skrócenie kredytu</strong>.{' '}
-        <strong>Łącznie</strong> — pełna kwota do spłaty z tym bonusem (kapitał + odsetki + nadpłaty,
-        czyli ile <em>realnie zapłacisz</em>).{' '}
-        <strong>ROI</strong> — efektywność każdej złotówki bonusu (oszczędność odsetek / suma
-        bonusu w okresie).
-      </p>
+      <div className="space-y-1 text-xs text-slate-500">
+        <p>
+          <strong className="text-green-700">Oszczędność</strong> — odsetki, których nie zapłacisz
+          vs. sama baza (pod liczbą: o ile skróci się kredyt). <em>Reinw.</em> — gdy kredyt skończy
+          się wcześniej, uwolnioną ratę wkładasz do brokerki przez te zaoszczędzone miesiące;
+          to dodatkowy zysk po Belce. Suma obu daje pełną korzyść nadpłaty.
+        </p>
+        <p>
+          <strong>Łącznie</strong> — całość spłaty z bonusem (kapitał + odsetki + nadpłaty).{' '}
+          <strong>ROI</strong> — ile odsetek odzyskuje każda złotówka bonusu (powyżej 100% =
+          bonus zwraca się z naddatkiem).
+        </p>
+        <p>
+          <strong className="text-amber-700">Inwestycja bonusu</strong> — zysk netto po Belce
+          (19%), gdybyś tę samą kwotę bonusu zamiast nadpłacać włożył miesięcznie do brokerki,
+          a portfel rósł aż do dnia, w którym i tak skończyłby się Twój kredyt z samą bazą.
+          Pomarańczowy (↑) = inwestycja wygrywa; szary (↓) = nadpłata wygrywa.
+        </p>
+      </div>
     </div>
   )
 }

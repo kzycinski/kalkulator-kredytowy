@@ -5,6 +5,7 @@ import type {
   SweepResult,
 } from '../../types/calc'
 import { computeSchedule } from './mortgageCalculator'
+import { round2 } from './rounding'
 import { findSweetSpot } from './sweetSpotAnalyzer'
 
 const MAX_POINTS = 200
@@ -70,8 +71,4 @@ export function computeSweep(req: CompareSweepRequest): SweepResult {
     baselineInterest,
     baselineMonths,
   }
-}
-
-export function round2(n: number): number {
-  return Math.round(n * 100) / 100
 }

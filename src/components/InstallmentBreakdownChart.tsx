@@ -33,7 +33,7 @@ export function InstallmentBreakdownChart({ rows }: { rows: ScheduleRow[] }) {
             formatter={(v: number) => formatPLN(v)}
             labelFormatter={(m) => `Miesiąc ${m}`}
           />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
           <Area type="monotone" dataKey="Kapitał" stackId="1" stroke="#1e40af" fill="#3b82f6" />
           <Area type="monotone" dataKey="Odsetki" stackId="1" stroke="#b91c1c" fill="#ef4444" />
           <Area type="monotone" dataKey="Nadpłata" stackId="1" stroke="#15803d" fill="#22c55e" />

@@ -40,7 +40,7 @@ export function OverpaymentValueChart({
   return (
     <div data-testid="value-chart" className="h-72 w-full">
       <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 24, left: 8 }}>
+        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 30, left: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis
             dataKey="month"

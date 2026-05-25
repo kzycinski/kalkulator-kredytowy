@@ -1,17 +1,6 @@
-import type { ScenarioSpec } from '../types/calc'
+import type { BonusConfig, BonusDuration, ScenarioSpec, UIScenario } from '../types/calc'
 
-export type BonusDuration = 'first-year' | 'first-two-years'
-
-export interface BonusConfig {
-  duration: BonusDuration
-  amount: number
-}
-
-export interface UIScenario {
-  name: string
-  recurring: number
-  bonus: BonusConfig | null
-}
+export type { BonusConfig, BonusDuration, UIScenario }
 
 export const BONUS_LABEL: Record<BonusDuration, string> = {
   'first-year': '1. rok (mies. 1–12)',

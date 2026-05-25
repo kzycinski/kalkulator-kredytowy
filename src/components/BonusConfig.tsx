@@ -1,10 +1,7 @@
-export interface BonusConfigValue {
-  baseRecurring: number
-  bonusFrom: number
-  bonusTo: number
-  bonusStep: number
-  durationsMonths: number[]
-}
+import type { BonusConfigValue } from '../types/calc'
+import { NumericInput } from './ui/NumericInput'
+
+export type { BonusConfigValue }
 
 export const DURATION_OPTIONS: Array<{ months: number; label: string }> = [
   { months: 6, label: '6 mies.' },
@@ -34,68 +31,67 @@ export function BonusConfig({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-slate-600">Cykliczna baza (PLN/mies)</span>
-          <input
-            type="number"
-            min={0}
-            step={100}
-            value={value.baseRecurring}
-            aria-label="Cykliczna baza"
-            onChange={(e) => {
-              const v = Number(e.target.value)
-              if (Number.isFinite(v) && v >= 0) onChange({ ...value, baseRecurring: v })
-            }}
-            className="rounded border border-slate-300 px-2 py-1 text-sm"
-          />
-        </label>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <label className="flex flex-col gap-1">
           <span className="text-xs text-slate-600">Bonus od (PLN/mies)</span>
-          <input
-            type="number"
+          <NumericInput
+            value={value.bonusFrom}
             min={0}
             step={100}
-            value={value.bonusFrom}
             aria-label="Bonus od"
-            onChange={(e) => {
-              const v = Number(e.target.value)
-              if (Number.isFinite(v) && v >= 0) onChange({ ...value, bonusFrom: v })
-            }}
+            onChange={(v) => { if (v >= 0) onChange({ ...value, bonusFrom: v }) }}
             className="rounded border border-slate-300 px-2 py-1 text-sm"
           />
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs text-slate-600">Bonus do (PLN/mies)</span>
-          <input
-            type="number"
+          <NumericInput
+            value={value.bonusTo}
             min={1}
             step={100}
-            value={value.bonusTo}
             aria-label="Bonus do"
-            onChange={(e) => {
-              const v = Number(e.target.value)
-              if (Number.isFinite(v) && v > 0) onChange({ ...value, bonusTo: v })
-            }}
+            onChange={(v) => { if (v > 0) onChange({ ...value, bonusTo: v }) }}
             className="rounded border border-slate-300 px-2 py-1 text-sm"
           />
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs text-slate-600">Krok (PLN)</span>
-          <input
-            type="number"
+          <NumericInput
+            value={value.bonusStep}
             min={1}
             step={50}
-            value={value.bonusStep}
             aria-label="Krok"
-            onChange={(e) => {
-              const v = Number(e.target.value)
-              if (Number.isFinite(v) && v > 0) onChange({ ...value, bonusStep: v })
-            }}
+            onChange={(v) => { if (v > 0) onChange({ ...value, bonusStep: v }) }}
             className="rounded border border-slate-300 px-2 py-1 text-sm"
           />
         </label>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-slate-600">Inwestycja (% rocznie)</span>
+          <div className="flex items-center gap-1">
+            <NumericInput
+              value={value.investmentRate}
+              min={0}
+              max={50}
+              step={0.5}
+              aria-label="Stopa zwrotu inwestycji"
+              onChange={(v) => { if (v >= 0) onChange({ ...value, investmentRate: v }) }}
+              className="w-14 rounded border border-slate-300 px-2 py-1 text-sm"
+            />
+            <span className="text-xs text-slate-400">%</span>
+            {([5, 7, 10] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => onChange({ ...value, investmentRate: p })}
+                className={`rounded px-1.5 py-0.5 text-xs ${value.investmentRate === p ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              >
+                {p === 10 ? 'S&P' : `${p}%`}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
+
       <div>
         <span className="mb-1 block text-xs text-slate-600">Okresy bonusu</span>
         <div className="flex flex-wrap gap-3">

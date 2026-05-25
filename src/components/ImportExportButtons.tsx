@@ -5,6 +5,7 @@ import {
   downloadScenarios,
   parseScenarioImport,
 } from '../lib/scenarioIO'
+import { pluralScenariuszy } from '../lib/format'
 
 export function ImportExportButtons() {
   const scenarios = useLoanStore((s) => s.savedScenarios)
@@ -18,7 +19,7 @@ export function ImportExportButtons() {
       return
     }
     downloadScenarios(scenarios)
-    setMessage({ type: 'ok', text: `Pobrano ${scenarios.length} scenariuszy` })
+    setMessage({ type: 'ok', text: `Pobrano ${scenarios.length} ${pluralScenariuszy(scenarios.length)}` })
   }
 
   function handlePick() {
@@ -35,7 +36,7 @@ export function ImportExportButtons() {
       const result = importScenarios(imported)
       setMessage({
         type: 'ok',
-        text: `Wgrano ${imported.length} scenariuszy (dodano ${result.added}, zaktualizowano ${result.replaced})`,
+        text: `Wgrano ${imported.length} ${pluralScenariuszy(imported.length)} (dodano ${result.added}, zaktualizowano ${result.replaced})`,
       })
     } catch (err) {
       const msg =
@@ -49,7 +50,7 @@ export function ImportExportButtons() {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col items-start gap-1">
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -77,11 +78,7 @@ export function ImportExportButtons() {
       {message && (
         <p
           role="status"
-          className={
-            message.type === 'ok'
-              ? 'text-sm text-green-700'
-              : 'text-sm text-red-600'
-          }
+          className={message.type === 'ok' ? 'text-xs text-green-700' : 'text-xs text-red-600'}
         >
           {message.text}
         </p>

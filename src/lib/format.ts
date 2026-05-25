@@ -53,6 +53,15 @@ export function pluralRat(n: number): string {
   return 'rat'
 }
 
+export function pluralScenariuszy(n: number): string {
+  if (n === 1) return 'scenariusz'
+  const lastTwo = n % 100
+  const last = n % 10
+  if (lastTwo >= 12 && lastTwo <= 14) return 'scenariuszy'
+  if (last >= 2 && last <= 4) return 'scenariusze'
+  return 'scenariuszy'
+}
+
 export function formatDate(iso: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return iso

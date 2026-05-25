@@ -76,6 +76,9 @@ function isValidScenario(s: unknown): s is SavedScenario {
     typeof o.overpaymentStrategy === 'string' &&
     typeof o.recurringOverpayment === 'number' &&
     typeof o.createdAt === 'string' &&
-    typeof o.updatedAt === 'string'
+    typeof o.updatedAt === 'string' &&
+    Array.isArray(o.timeBands) &&
+    o.customOverpayments !== null &&
+    typeof o.customOverpayments === 'object'
   )
 }

@@ -27,9 +27,10 @@ function nonNegative(d: Decimal): Decimal {
 
 function addMonths(isoDate: string, months: number): string {
   const parts = isoDate.split('-').map(Number)
-  const y = parts[0] ?? 2026
-  const m = parts[1] ?? 1
-  const d = parts[2] ?? 1
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) {
+    throw new Error(`Invalid ISO date: ${isoDate}`)
+  }
+  const [y, m, d] = parts as [number, number, number]
   const date = new Date(Date.UTC(y, m - 1 + months, d))
   return date.toISOString().slice(0, 10)
 }

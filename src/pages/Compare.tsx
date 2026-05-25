@@ -1,62 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useLoanStore } from '../store/loanStore'
 import { useCompareSweep } from '../hooks/useCompareSweep'
 import { useCompareScenarios } from '../hooks/useCompareScenarios'
-import { SweepConfig, type SweepConfigValue } from '../components/SweepConfig'
+import { useBaseRequest } from '../hooks/useLoanRequests'
+import { SweepConfig } from '../components/SweepConfig'
 import { SweepChart } from '../components/SweepChart'
 import { SweetSpotCard } from '../components/SweetSpotCard'
 import { ScenariosBuilder } from '../components/ScenariosBuilder'
-import { toScenarioSpec, type UIScenario } from '../lib/scenarioModel'
+import { toScenarioSpec } from '../lib/scenarioModel'
 import { ScenariosBarChart } from '../components/ScenariosBarChart'
 import { ScenariosTable } from '../components/ScenariosTable'
-import { formatPLN } from '../lib/format'
-import type { ScheduleRequest } from '../types/calc'
-
-const DEFAULT_SCENARIOS: UIScenario[] = [
-  { name: 'Bez nadpłat', recurring: 0, bonus: null },
-  { name: '500/mies', recurring: 500, bonus: null },
-  { name: '1000/mies', recurring: 1000, bonus: null },
-  {
-    name: '500/mies + 1000 przez 1. rok',
-    recurring: 500,
-    bonus: { duration: 'first-year', amount: 1000 },
-  },
-  {
-    name: '500/mies + 500 przez 2 lata',
-    recurring: 500,
-    bonus: { duration: 'first-two-years', amount: 500 },
-  },
-]
+import { formatPercent, formatPLN } from '../lib/format'
 
 export function Compare() {
   const principal = useLoanStore((s) => s.principal)
   const annualRate = useLoanStore((s) => s.annualRate)
   const termMonths = useLoanStore((s) => s.termMonths)
-  const startDate = useLoanStore((s) => s.startDate)
-  const installmentType = useLoanStore((s) => s.installmentType)
-  const overpaymentStrategy = useLoanStore((s) => s.overpaymentStrategy)
+  const sweepCfg = useLoanStore((s) => s.sweepCfg)
+  const setSweepCfg = useLoanStore((s) => s.setSweepCfg)
+  const scenarios = useLoanStore((s) => s.compareScenarios)
+  const setScenarios = useLoanStore((s) => s.setCompareScenarios)
 
-  const baseReq = useMemo<ScheduleRequest>(
-    () => ({
-      principal,
-      annualRate,
-      termMonths,
-      startDate,
-      installmentType,
-      overpaymentStrategy,
-      recurringOverpayment: 0,
-      customOverpayments: {},
-      timeBands: [],
-    }),
-    [principal, annualRate, termMonths, startDate, installmentType, overpaymentStrategy],
-  )
+  const baseReq = useBaseRequest()
 
-  const [sweepCfg, setSweepCfg] = useState<SweepConfigValue>({
-    from: 0,
-    to: 5000,
-    step: 250,
-    threshold: 0.5,
-  })
   const sweepReq = useMemo(
     () => ({
       base: baseReq,
@@ -67,7 +34,6 @@ export function Compare() {
   )
   const { data: sweep, isLoading: sweepLoading, error: sweepError } = useCompareSweep(sweepReq)
 
-  const [scenarios, setScenarios] = useState<UIScenario[]>(DEFAULT_SCENARIOS)
   const scenariosReq = useMemo(
     () => ({
       base: baseReq,
@@ -84,11 +50,11 @@ export function Compare() {
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-lg border bg-slate-100 px-4 py-2 text-sm text-slate-700">
-        Bazowy kredyt: <strong>{formatPLN(principal)}</strong> @ {(annualRate * 100).toFixed(2)}% /{' '}
+        Bazowy kredyt: <strong>{formatPLN(principal)}</strong> @ {formatPercent(annualRate)} /{' '}
         {termMonths} mies. (zmień w{' '}
-        <a href="/" className="underline">
+        <Link to="/" className="underline">
           Kalkulatorze
-        </a>
+        </Link>
         )
       </div>
 
@@ -180,9 +146,27 @@ export function Compare() {
         {scenariosLoading && !scenariosResult && (
           <p className="mt-4 text-slate-500">Liczenie scenariuszy...</p>
         )}
+
         <div className="mt-6">
           <ScenariosBarChart result={scenariosResult} />
         </div>
+        {scenariosResult && scenariosResult.scenarios.length > 0 && (
+          <p className="mt-2 text-xs text-slate-500">
+            Każdy słupek to pełen koszt scenariusza — krótszy = taniej.{' '}
+            <span className="inline-flex items-baseline gap-1">
+              <span className="inline-block h-2 w-2 rounded-sm bg-slate-400" />
+              <strong>Kapitał</strong> spłacany przez ratę,
+            </span>{' '}
+            <span className="inline-flex items-baseline gap-1">
+              <span className="inline-block h-2 w-2 rounded-sm bg-emerald-500" />
+              <strong>Nadpłaty</strong> (też spłacają kapitał, ale szybciej),
+            </span>{' '}
+            <span className="inline-flex items-baseline gap-1">
+              <span className="inline-block h-2 w-2 rounded-sm bg-rose-400" />
+              <strong>Odsetki</strong>. Więcej zielonego → mniej różowego → krótszy słupek.
+            </span>
+          </p>
+        )}
         <div className="mt-4">
           <ScenariosTable result={scenariosResult} />
         </div>

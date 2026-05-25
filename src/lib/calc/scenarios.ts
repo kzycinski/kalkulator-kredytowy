@@ -5,7 +5,7 @@ import type {
   ScheduleRequest,
 } from '../../types/calc'
 import { computeSchedule } from './mortgageCalculator'
-import { round2 } from './sweepCalculator'
+import { round2, round4 } from './rounding'
 
 export function computeCompareScenarios(req: CompareScenariosRequest): CompareResult {
   const baselineReq: ScheduleRequest = {
@@ -34,6 +34,7 @@ export function computeCompareScenarios(req: CompareScenariosRequest): CompareRe
     return {
       name: spec.name,
       summary: schedule.summary,
+      rows: schedule.rows,
       monthsSaved,
       interestSaved,
       roi,
@@ -41,8 +42,4 @@ export function computeCompareScenarios(req: CompareScenariosRequest): CompareRe
   })
 
   return { scenarios, baseline: baseline.summary }
-}
-
-function round4(n: number): number {
-  return Math.round(n * 10000) / 10000
 }

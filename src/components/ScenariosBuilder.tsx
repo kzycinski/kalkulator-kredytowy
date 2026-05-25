@@ -1,12 +1,9 @@
-import { useState } from 'react'
 import {
   BONUS_LABEL,
-  toScenarioSpec,
   type BonusConfig,
   type BonusDuration,
   type UIScenario,
 } from '../lib/scenarioModel'
-import { useLoanStore } from '../store/loanStore'
 
 export function ScenariosBuilder({
   scenarios,
@@ -15,15 +12,6 @@ export function ScenariosBuilder({
   scenarios: UIScenario[]
   onChange: (next: UIScenario[]) => void
 }) {
-  const principal = useLoanStore((s) => s.principal)
-  const annualRate = useLoanStore((s) => s.annualRate)
-  const termMonths = useLoanStore((s) => s.termMonths)
-  const startDate = useLoanStore((s) => s.startDate)
-  const installmentType = useLoanStore((s) => s.installmentType)
-  const overpaymentStrategy = useLoanStore((s) => s.overpaymentStrategy)
-  const addSavedScenario = useLoanStore((s) => s.addSavedScenario)
-
-  const [justSavedIdx, setJustSavedIdx] = useState<number | null>(null)
 
   function updateAt(idx: number, patch: Partial<UIScenario>) {
     const next = scenarios.slice()
@@ -71,28 +59,6 @@ export function ScenariosBuilder({
     ])
   }
 
-  function saveAt(idx: number) {
-    const scenario = scenarios[idx]
-    if (!scenario) return
-    const spec = toScenarioSpec(scenario)
-    addSavedScenario({
-      name: scenario.name,
-      principal,
-      annualRate,
-      termMonths,
-      startDate,
-      installmentType,
-      overpaymentStrategy,
-      recurringOverpayment: spec.recurringOverpayment ?? 0,
-      customOverpayments: spec.customOverpayments,
-      timeBands: spec.timeBands,
-    })
-    setJustSavedIdx(idx)
-    window.setTimeout(() => {
-      setJustSavedIdx((curr) => (curr === idx ? null : curr))
-    }, 1800)
-  }
-
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
@@ -111,7 +77,7 @@ export function ScenariosBuilder({
       {scenarios.map((s, idx) => (
         <div
           key={idx}
-          className="grid grid-cols-1 gap-2 rounded border border-slate-200 p-2 sm:grid-cols-[1.5fr_1fr_1.3fr_1fr_auto_auto] sm:items-end"
+          className="grid grid-cols-1 gap-2 rounded border border-slate-200 p-2 sm:grid-cols-[1.5fr_1fr_1.3fr_1fr_auto] sm:items-end"
         >
           <label className="flex flex-col gap-0.5">
             <span className="text-xs text-slate-600">Nazwa</span>
@@ -172,19 +138,6 @@ export function ScenariosBuilder({
           </label>
           <button
             type="button"
-            onClick={() => saveAt(idx)}
-            aria-label={`Zapisz scenariusz ${idx + 1} do moich scenariuszy`}
-            title="Zapisz w Scenariusze (localStorage)"
-            className={
-              justSavedIdx === idx
-                ? 'rounded border border-green-300 bg-green-50 px-2 py-1 text-xs font-medium text-green-700'
-                : 'rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50'
-            }
-          >
-            {justSavedIdx === idx ? '✓ zapisano' : '💾 zapisz'}
-          </button>
-          <button
-            type="button"
             onClick={() => removeAt(idx)}
             aria-label={`Usuń scenariusz ${idx + 1}`}
             className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-red-600"
@@ -195,8 +148,7 @@ export function ScenariosBuilder({
       ))}
       <p className="mt-2 text-xs text-slate-500">
         Bonus = dodatkowa kwota nadpłaty doliczana <strong>na wierzch cyklicznej</strong> w pierwszych
-        miesiącach. Przycisk <strong>💾 zapisz</strong> dorzuca scenariusz do zakładki Scenariusze
-        (lokalnie w przeglądarce).
+        miesiącach. Scenariusze zapisują się automatycznie.
       </p>
     </div>
   )

@@ -4,9 +4,11 @@ import { formatMonths, formatPLN } from '../lib/format'
 export function DoradcaTable({
   result,
   showTargetCol,
+  targetMonths,
 }: {
   result: DoradcaResult
   showTargetCol: boolean
+  targetMonths: number | null
 }) {
   const strategies = result.strategies
   if (strategies.length === 0) return null
@@ -28,17 +30,17 @@ export function DoradcaTable({
       <StrategyTable
         title="Eksploracja strategii"
         rows={exploration}
-        bestByCost={result.bestByCost}
+        bestByCost={result.bestByAbsoluteCost}
         bestByROI={result.bestByROI}
         showTargetCol={showTargetCol}
       />
 
-      {showTargetCol && (
+      {showTargetCol && targetMonths !== null && (
         <StrategyTable
-          title={`Strategie osiągające cel (≤ ${result.strategies.find((s) => s.hitsTarget)?.months ?? '—'} mies.)`}
+          title={`Strategie osiągające cel (≤ ${targetMonths} mies. / ${formatMonths(targetMonths)})`}
           rows={targetGroup}
-          bestByCost={result.bestHittingTarget}
-          bestByROI={null}
+          bestByCost={null}
+          bestByROI={result.bestHittingTarget}
           showTargetCol={false}
           emptyHint="Żadna z kandydatów nie osiąga celu w granicy max nadpłaty. Zwiększ max albo wydłuż cel."
         />
@@ -83,6 +85,13 @@ function StrategyTable({
                 <th className="px-3 py-2 text-right">Oszczędność</th>
                 <th className="px-3 py-2 text-right">Skrócenie</th>
                 <th className="px-3 py-2 text-right">Avg/mc</th>
+                <th className="px-3 py-2 text-right">
+                  Inwestycja vs Nadpłata
+                  <br />
+                  <span className="font-normal text-slate-400">
+                    (te same kwoty, horyzont = długość kredytu bez nadpłat)
+                  </span>
+                </th>
                 {showTargetCol && <th className="px-3 py-2 text-right">Cel?</th>}
               </tr>
             </thead>
@@ -107,6 +116,11 @@ function StrategyTable({
                         {isBestROI && (
                           <span className="ml-2 rounded bg-blue-200 px-1.5 py-0.5 text-xs text-blue-800">
                             ⚡ najlepsze ROI
+                          </span>
+                        )}
+                        {s.investWins && (
+                          <span className="ml-2 rounded bg-amber-200 px-1.5 py-0.5 text-xs text-amber-800">
+                            📈 lepiej inwestować
                           </span>
                         )}
                       </div>
@@ -137,6 +151,40 @@ function StrategyTable({
                     <td className="px-3 py-1.5 text-right tabular-nums">
                       {formatPLN(s.avgOverpaymentPerMonth)}
                     </td>
+                    <td className="px-3 py-1.5 text-right tabular-nums">
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex flex-col items-end leading-tight">
+                          <span className="text-[10px] uppercase tracking-wide text-amber-700/80">
+                            📈 inwestycja (zysk netto)
+                          </span>
+                          <span className={`font-semibold ${s.investWins ? 'text-amber-600' : 'text-slate-500'}`}>
+                            {formatPLN(s.investmentProfit)}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            portfel {formatPLN(s.investmentFV)}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-end border-t border-slate-200 pt-1 leading-tight">
+                          <span className="text-[10px] uppercase tracking-wide text-green-700/80">
+                            🏠 nadpłata (korzyść)
+                          </span>
+                          <span className={`font-semibold ${s.investWins ? 'text-slate-500' : 'text-green-700'}`}>
+                            {formatPLN(s.interestSaved + s.reinvestedInstallmentProfit)}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            {formatPLN(s.interestSaved)} odsetki
+                            {s.reinvestedInstallmentProfit > 0 && (
+                              <> + {formatPLN(s.reinvestedInstallmentProfit)} reinw.</>
+                            )}
+                          </span>
+                        </div>
+                        <div className={`text-xs font-semibold ${s.investWins ? 'text-amber-600' : 'text-green-700'}`}>
+                          {s.investWins
+                            ? `↑ +${formatPLN(s.investmentProfit - s.interestSaved - s.reinvestedInstallmentProfit)}`
+                            : `↓ −${formatPLN(s.interestSaved + s.reinvestedInstallmentProfit - s.investmentProfit)}`}
+                        </div>
+                      </div>
+                    </td>
                     {showTargetCol && (
                       <td className="px-3 py-1.5 text-right">
                         {s.hitsTarget ? (
@@ -153,13 +201,21 @@ function StrategyTable({
           </table>
         </div>
       )}
-      {bestByCost && rows.length > 0 && (
-        <p className="mt-2 text-xs text-slate-500">
-          <strong>🏆 Najtaniej</strong> — najmniejsze „Łącznie zapłacisz" (uwzględnia nadpłaty
-          jako koszt poniesiony).{' '}
-          <strong>⚡ Najlepsze ROI</strong> — każda złotówka nadpłaty zwraca najwięcej oszczędności
-          odsetek.
-        </p>
+      {rows.length > 0 && (
+        <div className="mt-2 space-y-1 text-xs text-slate-500">
+          <p>
+            <strong>🏆 Najtaniej</strong> — najmniejsze „Łącznie zapłacisz".{' '}
+            <strong>⚡ Najlepsze ROI</strong> — każda złotówka nadpłaty zwraca najwięcej odsetek.{' '}
+            <strong>📈 Lepiej inwestować</strong> — zysk inwestycji {'>'} (odsetki + reinwestycja raty).
+          </p>
+          <p>
+            Kolumna <em>Inwestycja vs Nadpłata</em>: w obu ścieżkach co miesiąc wychodzi z portfela
+            ta sama kwota (rata + nadpłata) — różni je tylko kierunek (broker vs bank).
+            Inwestycję liczymy z <em>faktycznego</em> cash flow danej strategii (sprint/schodek
+            mają nadpłaty front-loaded, które mają więcej czasu na kapitalizację); zysk po
+            podatku Belki (19%).
+          </p>
+        </div>
       )}
     </div>
   )

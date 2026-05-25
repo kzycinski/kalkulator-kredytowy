@@ -41,4 +41,19 @@ describe('App', () => {
     renderApp('/scenarios')
     expect(screen.getByRole('heading', { name: /Zapisane scenariusze/i })).toBeInTheDocument()
   })
+
+  it('renders Bonus page on /bonus', () => {
+    renderApp('/bonus')
+    expect(screen.getByRole('heading', { name: /Bonus na start/i })).toBeInTheDocument()
+  })
+
+  it('renders Doradca page on /doradca', () => {
+    renderApp('/doradca')
+    expect(screen.getByRole('heading', { name: /Doradca/i })).toBeInTheDocument()
+  })
+
+  it('renders Insights page on /insights', () => {
+    renderApp('/insights')
+    expect(screen.getByText(/Sprawdź parametry kredytu — brak danych\./i)).toBeInTheDocument()
+  })
 })
