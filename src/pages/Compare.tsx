@@ -94,11 +94,37 @@ export function Compare() {
 
       <div className="rounded-lg border bg-white p-6 shadow-sm">
         <h2 className="mb-2 text-lg font-semibold">Sweep — znajdź sweet spot nadpłat</h2>
-        <p className="mb-4 text-sm text-slate-600">
-          Skanujemy zakres nadpłat i pokazujemy oszczędność odsetek, skrócenie kredytu i marginalny
-          zysk z każdego kolejnego kroku. Sweet spot to ostatni poziom nadpłaty, gdzie marginalny
-          zysk jest jeszcze powyżej progu.
+        <p className="mb-3 text-sm text-slate-600">
+          Skanujemy zakres nadpłat i pokazujemy oszczędność odsetek, skrócenie kredytu i marginalną
+          oszczędność z każdego kolejnego kroku. Sweet spot to ostatni poziom nadpłaty, gdzie
+          marginalna oszczędność jest jeszcze powyżej progu.
         </p>
+        <details className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+          <summary className="cursor-pointer font-medium text-slate-800">
+            💡 Co to jest „marginalna oszczędność"?
+          </summary>
+          <div className="mt-2 space-y-2 text-slate-600">
+            <p>
+              To <strong>różnica w oszczędności odsetek między dwoma sąsiednimi punktami sweepu</strong>
+              — czyli o ile więcej zaoszczędzisz odsetek, gdy zwiększysz nadpłatę o kolejny krok
+              (np. z 500 PLN na 750 PLN).
+            </p>
+            <p>
+              Przykład dla sweep 0–5000 step 250:
+              <br />
+              jeśli przy nadpłacie 500 PLN/mies. oszczędzisz 266 000 PLN odsetek, a przy 750 PLN —
+              290 000 PLN, to{' '}
+              <strong>marginalna oszczędność w punkcie 500 = 24 000 PLN</strong> (tyle dorzucasz
+              dodając kolejne 250 PLN do nadpłaty).
+            </p>
+            <p>
+              <strong>Wysoka</strong> — kolejna złotówka nadpłaty wciąż mocno się opłaca.{' '}
+              <strong>Niska</strong> — diminishing returns, czyli kolejne nadpłaty przynoszą coraz
+              mniej. Sweet spot wskazuje moment, w którym marginalna oszczędność zaczyna spadać
+              znacząco — to znak, że dalsze zwiększanie nadpłaty daje proporcjonalnie mniej.
+            </p>
+          </div>
+        </details>
         <SweepConfig value={sweepCfg} onChange={setSweepCfg} />
         <div className="mt-4">
           {sweepError && <p className="text-sm text-red-600">Błąd: {sweepError.message}</p>}

@@ -69,7 +69,7 @@ export function LoanParamsForm() {
   const principalError = principal < 0.01 ? 'Kwota musi być większa niż 0' : null
   const rateError =
     annualRate < 0 || annualRate > 0.3
-      ? 'Oprocentowanie musi być w zakresie 0–30% (0.0–0.3)'
+      ? 'Oprocentowanie musi być w zakresie 0–30%'
       : null
   const termError =
     termMonths < 1 || termMonths > 600 ? 'Okres musi mieścić się w 1–600 miesięcy' : null
@@ -88,12 +88,12 @@ export function LoanParamsForm() {
           error={principalError}
         />
         <NumberField
-          label="Oprocentowanie roczne (np. 0.0725 = 7.25%)"
-          value={annualRate}
-          onChange={setAnnualRate}
-          step={0.0001}
+          label="Oprocentowanie roczne (%)"
+          value={Number.isFinite(annualRate) ? Math.round(annualRate * 10000) / 100 : annualRate}
+          onChange={(v) => setAnnualRate(Math.round(v * 100) / 10000)}
+          step={0.01}
           min={0}
-          max={0.3}
+          max={30}
           error={rateError}
         />
         <NumberField
