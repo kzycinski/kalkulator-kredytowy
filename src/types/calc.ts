@@ -113,7 +113,7 @@ export interface SweepConfigValue {
   threshold: number
 }
 
-export interface DoradcaConfigValue {
+export interface AdvisorConfigValue {
   comfortable: number
   max: number
   hasTarget: boolean
@@ -155,7 +155,7 @@ export interface SaveScenarioRequest {
   timeBands?: TimeBand[]
   sweepCfg?: SweepConfigValue
   compareScenarios?: UIScenario[]
-  doradcaCfg?: DoradcaConfigValue
+  advisorCfg?: AdvisorConfigValue
   bonusCfg?: BonusConfigValue
 }
 
@@ -173,7 +173,7 @@ export interface SavedScenario {
   timeBands: TimeBand[]
   sweepCfg?: SweepConfigValue
   compareScenarios?: UIScenario[]
-  doradcaCfg?: DoradcaConfigValue
+  advisorCfg?: AdvisorConfigValue
   bonusCfg?: BonusConfigValue
   createdAt: string
   updatedAt: string

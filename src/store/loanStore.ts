@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type {
   BonusConfigValue,
-  DoradcaConfigValue,
+  AdvisorConfigValue,
   InstallmentType,
   OverpaymentStrategy,
   SaveScenarioRequest,
@@ -37,7 +37,7 @@ export interface LoanState {
   savedScenarios: SavedScenario[]
   sweepCfg: SweepConfigValue
   compareScenarios: UIScenario[]
-  doradcaCfg: DoradcaConfigValue
+  advisorCfg: AdvisorConfigValue
   bonusCfg: BonusConfigValue
 
   setPrincipal: (v: number) => void
@@ -60,7 +60,7 @@ export interface LoanState {
   importSavedScenarios: (scenarios: SavedScenario[]) => ImportResult
   setSweepCfg: (v: SweepConfigValue) => void
   setCompareScenarios: (v: UIScenario[]) => void
-  setDoradcaCfg: (v: DoradcaConfigValue) => void
+  setAdvisorCfg: (v: AdvisorConfigValue) => void
   setBonusCfg: (v: BonusConfigValue) => void
   resetToDefaults: () => void
 }
@@ -75,7 +75,7 @@ const DEFAULT_COMPARE_SCENARIOS: UIScenario[] = [
 ]
 
 const DEFAULT_SWEEP_CFG: SweepConfigValue = { from: 0, to: 5000, step: 250, threshold: 0.5 }
-const DEFAULT_DORADCA_CFG: DoradcaConfigValue = { comfortable: 1000, max: 5000, hasTarget: false, targetYears: 15, investmentRate: 5 }
+const DEFAULT_ADVISOR_CFG: AdvisorConfigValue = { comfortable: 1000, max: 5000, hasTarget: false, targetYears: 15, investmentRate: 5 }
 const DEFAULT_BONUS_CFG: BonusConfigValue = { bonusFrom: 0, bonusTo: 5000, bonusStep: 500, durationsMonths: [12, 24, 36, 60], investmentRate: 5 }
 
 const DEFAULT_LOAN_STATE = {
@@ -91,7 +91,7 @@ const DEFAULT_LOAN_STATE = {
   copyToNextCount: null as number | null,
   sweepCfg: DEFAULT_SWEEP_CFG,
   compareScenarios: DEFAULT_COMPARE_SCENARIOS,
-  doradcaCfg: DEFAULT_DORADCA_CFG,
+  advisorCfg: DEFAULT_ADVISOR_CFG,
   bonusCfg: DEFAULT_BONUS_CFG,
 }
 
@@ -155,7 +155,7 @@ export const useLoanStore = create<LoanState>()(
           timeBands: [...scenario.timeBands],
           ...(scenario.sweepCfg !== undefined && { sweepCfg: scenario.sweepCfg }),
           ...(scenario.compareScenarios !== undefined && { compareScenarios: scenario.compareScenarios }),
-          ...(scenario.doradcaCfg !== undefined && { doradcaCfg: scenario.doradcaCfg }),
+          ...(scenario.advisorCfg !== undefined && { advisorCfg: scenario.advisorCfg }),
           ...(scenario.bonusCfg !== undefined && { bonusCfg: scenario.bonusCfg }),
         }),
       addSavedScenario: (input) => {
@@ -174,7 +174,7 @@ export const useLoanStore = create<LoanState>()(
           timeBands: [...(input.timeBands ?? [])],
           sweepCfg: input.sweepCfg ?? get().sweepCfg,
           compareScenarios: input.compareScenarios ?? get().compareScenarios,
-          doradcaCfg: input.doradcaCfg ?? get().doradcaCfg,
+          advisorCfg: input.advisorCfg ?? get().advisorCfg,
           bonusCfg: input.bonusCfg ?? get().bonusCfg,
           createdAt: now,
           updatedAt: now,
@@ -187,7 +187,7 @@ export const useLoanStore = create<LoanState>()(
       clearSavedScenarios: () => set({ savedScenarios: [] }),
       setSweepCfg: (v) => set({ sweepCfg: v }),
       setCompareScenarios: (v) => set({ compareScenarios: v }),
-      setDoradcaCfg: (v) => set({ doradcaCfg: v }),
+      setAdvisorCfg: (v) => set({ advisorCfg: v }),
       setBonusCfg: (v) => set({ bonusCfg: v }),
       resetToDefaults: () => {
         useLoanStore.persist.clearStorage()
@@ -226,7 +226,7 @@ export const useLoanStore = create<LoanState>()(
         savedScenarios: state.savedScenarios,
         sweepCfg: state.sweepCfg,
         compareScenarios: state.compareScenarios,
-        doradcaCfg: state.doradcaCfg,
+        advisorCfg: state.advisorCfg,
         bonusCfg: state.bonusCfg,
       }),
     },

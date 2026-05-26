@@ -3,7 +3,7 @@ import { Calculator } from './pages/Calculator'
 import { Compare } from './pages/Compare'
 import { Scenarios } from './pages/Scenarios'
 import { BonusAnalysis } from './pages/BonusAnalysis'
-import { Doradca } from './pages/Doradca'
+import { Advisor } from './pages/Advisor'
 import { Insights } from './pages/Insights'
 import { useLoanStore } from './store/loanStore'
 
@@ -22,7 +22,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/compare" className={navLink}>Porównanie</NavLink>
           <NavLink to="/insights" className={navLink}>Insights</NavLink>
           <NavLink to="/bonus" className={navLink}>Bonus</NavLink>
-          <NavLink to="/doradca" className={navLink}>Doradca</NavLink>
+          <NavLink to="/advisor" className={navLink}>Doradca</NavLink>
           <NavLink to="/scenarios" className={navLink}>Scenariusze</NavLink>
           <button
             type="button"
@@ -47,7 +47,7 @@ export default function App() {
         <Route path="/compare" element={<Compare />} />
         <Route path="/insights" element={<Insights />} />
         <Route path="/bonus" element={<BonusAnalysis />} />
-        <Route path="/doradca" element={<Doradca />} />
+        <Route path="/advisor" element={<Advisor />} />
         <Route path="/scenarios" element={<Scenarios />} />
       </Routes>
     </Layout>
